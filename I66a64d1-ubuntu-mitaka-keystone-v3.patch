@@ -19,7 +19,7 @@ fi
 echo "INFO: Patching $package at $rootdir"
 cd $rootdir
 $patch -p 2 <<'EOF'
-From 8f8ff2f0288c9db5aac42540d8efa1e7de7c5ccf Mon Sep 17 00:00:00 2001
+From feb6e2dd5039831bef204be177471277885aa513 Mon Jun 26 09:51:05 2017
 Subject: Use configured user domain and project domain on Keystone client
 
 Change-Id: I1157acb71d9b76c1c7a9134df1500bb69dc836a2
@@ -28,10 +28,10 @@ Change-Id: I1157acb71d9b76c1c7a9134df1500bb69dc836a2
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/gbpservice/neutron/services/grouppolicy/drivers/cisco/apic/apic_mapping.py b/gbpservice/neutron/services/grouppolicy/drivers/cisco/apic/apic_mapping.py
-index c1a6688..fe7e6e9 100644
+index 13609e3..5228277 100644
 --- a/gbpservice/neutron/services/grouppolicy/drivers/cisco/apic/apic_mapping.py
 +++ b/gbpservice/neutron/services/grouppolicy/drivers/cisco/apic/apic_mapping.py
-@@ -307,13 +307,13 @@ class ApicMappingDriver(api.ResourceMappingDriver,
+@@ -288,13 +288,13 @@ class ApicMappingDriver(api.ResourceMappingDriver,
              if client:
                  keystone_authtoken = cfg.CONF.keystone_authtoken
                  pass_params = (
@@ -48,51 +48,6 @@ index c1a6688..fe7e6e9 100644
                  session = keysession.Session(auth=admin_auth)
              ApicMappingDriver.manager = apic_manager.APICManager(
                  apic_model.ApicDbModel(), logging, network_config, apic_config,
--- 
-2.10.0
-
-
-From f3352b325d2c65ff3d61f7ce88c2d078eabe041b Mon Sep 17 00:00:00 2001
-Subject: Use Neutron's Nova client for retrieving VMs' name
-
-Change-Id: I66a64d11ae09c426ca0114020c8b985f9307515e
----
- .../services/grouppolicy/drivers/cisco/apic/nova_client.py   | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
-
-diff --git a/gbpservice/neutron/services/grouppolicy/drivers/cisco/apic/nova_client.py b/gbpservice/neutron/services/grouppolicy/drivers/cisco/apic/nova_client.py
-index f4cc2e5..46d8802 100644
---- a/gbpservice/neutron/services/grouppolicy/drivers/cisco/apic/nova_client.py
-+++ b/gbpservice/neutron/services/grouppolicy/drivers/cisco/apic/nova_client.py
-@@ -10,12 +10,9 @@
- #    License for the specific language governing permissions and limitations
- #    under the License.
- 
--from keystoneauth1 import loading as ks_loading
- from neutron._i18n import _LW
- from neutron.notifiers import nova as n_nova
--from novaclient import client as nclient
- from novaclient import exceptions as nova_exceptions
--from oslo_config import cfg
- from oslo_log import log as logging
- 
- LOG = logging.getLogger(__name__)
-@@ -27,14 +24,7 @@ client = None
- def _get_client():
-     global client
-     if client is None:
--        auth = ks_loading.load_auth_from_conf_options(cfg.CONF, 'nova')
--        session = ks_loading.load_session_from_conf_options(
--            cfg.CONF, 'nova', auth=auth)
--
--        client = nclient.Client(
--            n_nova.NOVA_API_VERSION, session=session,
--            region_name=cfg.CONF.nova.region_name,
--            endpoint_type=cfg.CONF.nova.endpoint_type)
-+        client = n_nova.Notifier().nclient
-     return client
- 
- 
 -- 
 2.10.0
 EOF
