@@ -1,0 +1,43 @@
+#!/bin/sh
+set -e
+
+patch="/usr/bin/patch"
+package="aim"
+
+if ! [ -x "$patch" ] ; then
+    echo "ERROR: Executable '$patch' not installed."
+    exit 1
+fi
+
+rootdir=`python -c "import $package; print $package.__path__[0]" 2>/dev/null || :`
+if [ -z "$rootdir" ] ; then
+    echo "ERROR: Package '$package' not installed on this host"
+    exit 1
+fi
+
+echo "INFO: Patching $package at $rootdir"
+cd $rootdir
+$patch -p 2 <<'EOF'
+From 745c29c74144096b4905d6614d821d0a7c2f413d Thu May 18 04:13:59 2017
+Subject: Don't set useg pref with physical domains
+---
+ aim/agent/aid/universes/aci/converter.py | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/aim/agent/aid/universes/aci/converter.py b/aim/agent/aid/universes/aci/converter.py
+index 34c7325..9c960c0 100644
+--- a/aim/agent/aid/universes/aci/converter.py
++++ b/aim/agent/aid/universes/aci/converter.py
+@@ -132,8 +132,7 @@ def fv_rs_dom_att_converter(object_dict, otype, helper,
+                 aci_mo_type='fvRsDomAtt', to_aim=False)[0]
+             result.append({'fvRsDomAtt': {'attributes':
+                                           {'dn': dn,
+-                                           'tDn': phys_dn,
+-                                           'classPref': 'useg'}}})
++                                           'tDn': phys_dn}}})
+         # Convert OpenStack VMMs
+         for vmm in object_dict['openstack_vmm_domain_names']:
+             # Get VMM DN
+-- 
+EOF
+echo "INFO: ... Done"
